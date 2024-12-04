@@ -3,16 +3,17 @@ import { AppContext } from '../context/AppContext';
 import { assets } from '../assets/assets';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import Loader from '../component/Loader';
 
 const MyProfile = () => {
-  const {userData, setUserData, token, backendUrl, loadUserProfileData} = useContext(AppContext)
-  
+  const { userData, setUserData, token, backendUrl, loadUserProfileData, isLoading, setIsLoading } = useContext(AppContext)
+
   const [isEdit, setIsEdit] = useState(false);
   const [image, setImage] = useState(false)
 
   const updateUserProfileData = async () => {
-
-    try{
+    setIsLoading(true);
+    try {
       const formData = new FormData();
       formData.append('name', userData.name);
       formData.append('phone', userData.phone);
@@ -22,20 +23,22 @@ const MyProfile = () => {
 
       image && formData.append('image', image);
 
-      const { data } = await axios.post(backendUrl+ '/api/user/update-profile', formData, {headers: {token}});
-      if(data.success) {
+      const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, { headers: { token } });
+      if (data.success) {
         toast.success(data.message)
         await loadUserProfileData();
         setIsEdit(false);
         setImage(false);
-      }else{
+      } else {
         toast.error(data.message)
       }
-     
 
-    }catch(e){
+
+    } catch (e) {
       console.log(e)
       toast.error(e.message)
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -43,24 +46,24 @@ const MyProfile = () => {
     <div className='max-w-lg flex flex-col gap-2 text-sm'>
 
       {
-        isEdit 
-        ? <label htmlFor="image">
-          <div className='inline-block relative cursor-pointer'>
-            <img className='w-36 rounded opacity-75' src={image ? URL.createObjectURL(image) : userData.image} alt="" />
-            <img className='w-10 absolute bottom-12 right-12' src={image ? '' : assets.upload_icon} alt="" />
-          </div>
-          <input onChange={(e) => setImage(e.target.files[0])} type="file"  id="image"  hidden/>
-        </label>
-        :  <img className='w-36 rounded' src={userData.image} alt="" />
+        isEdit
+          ? <label htmlFor="image">
+            <div className='inline-block relative cursor-pointer'>
+              <img className='w-36 rounded opacity-75' src={image ? URL.createObjectURL(image) : userData.image} alt="" />
+              <img className='w-10 absolute bottom-12 right-12' src={image ? '' : assets.upload_icon} alt="" />
+            </div>
+            <input onChange={(e) => setImage(e.target.files[0])} type="file" id="image" hidden />
+          </label>
+          : <img className='w-36 rounded' src={userData.image} alt="" />
       }
 
-     
+
       {
         isEdit ?
           <input className='bg-gray-50 text-3xl font-medium max-w-60 mt-4' type="text" value={userData.name} onChange={e => setUserData(prev => ({ ...prev, name: e.target.value }))} />
           : <p className='font-medium text-3xl text-neutral-800 mt-4'>{userData.name}</p>
       }
-      <hr className='bg-zinc-400 h-[1px] border-none'/>
+      <hr className='bg-zinc-400 h-[1px] border-none' />
       <div>
         <p className='text-neutral-500 underline mt-3'>CONTACT INFORMATION</p>
         <div className='grid grid-cols-[1fr_3fr] gap-y-2.5 mt-3 text-neutral-700'>
@@ -109,10 +112,25 @@ const MyProfile = () => {
       </div>
 
       <div className='mt-10 '>
-        {isEdit
-          ? <button className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500' onClick={() => updateUserProfileData()}>Save information</button>
-          : <button className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500' onClick={() => setIsEdit(true)}>Edit</button>
+
+        {!isEdit &&
+          <button className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500' onClick={() => setIsEdit(true)}>Edit</button>
         }
+
+        {isEdit &&
+          <div className='flex'>
+            <button
+              className={`flex items-center justify-center  rounded-full  transition-all duration-500 mr-5 ${isLoading ? "bg-gray-400 py-4 px-8 cursor-not-allowed " : " px-8 py-2 bg-primary text-white hover:bg-blue-700"}`}
+              onClick={() => updateUserProfileData()}
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader/> : "Save"}
+            </button>
+            <button className='bg-gray-400 px-8 py-2 rounded-full hover:bg-black hover:text-white  transition-all duration-500' onClick={() => setIsEdit(false)}>Cancel</button>
+          </div>
+        }
+
+
       </div>
 
     </div>

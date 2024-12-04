@@ -5,11 +5,12 @@ import { assets } from '../assets/assets';
 import RelatedDoctors from '../component/RelatedDoctors';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import Loader from '../component/Loader';
 
 const Appointment = () => {
   const { docId } = useParams();
 
-  const { doctors, currencySymbol, backendUrl, token, getDoctorsData } = useContext(AppContext);
+  const { doctors, currencySymbol, backendUrl, token, getDoctorsData, isLoading, setIsLoading } = useContext(AppContext);
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const navigate = useNavigate()
@@ -84,6 +85,7 @@ const Appointment = () => {
   }
 
   const bookAppointment = async () => {
+    setIsLoading(true);
     if (!token) {
       toast.warn("Login to book appointment")
       return navigate('/login');
@@ -111,6 +113,8 @@ const Appointment = () => {
     } catch (error) {
       console.error('Error booking appointment:', error);
       toast.error(error.message)
+    }finally{
+      setIsLoading(false);
     }
   }
 
@@ -179,7 +183,13 @@ const Appointment = () => {
             </p>
           ))}
         </div>
-        <button onClick={bookAppointment} className='bg-primary text-white text-sm font-light px-14 py-3 rounded-full my-6'>Book an appointment</button>
+        <button
+          onClick={bookAppointment}
+          className={`flex justify-center items-center  text-sm font-light px-14  rounded-full my-6 ${isLoading ?"bg-gray-300 py-4" : "bg-primary text-white py-3"}`}
+          disabled={isLoading}
+        >
+          {isLoading ? <Loader/> : "Book an appointment"}
+        </button>
       </div>
 
       {/* listing related doctors */}

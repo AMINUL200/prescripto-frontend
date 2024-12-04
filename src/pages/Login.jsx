@@ -3,10 +3,11 @@ import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import Loader from '../component/Loader';
 
 const Login = () => {
 
-  const {backendUrl, token, setToken} = useContext(AppContext)
+  const { backendUrl, token, setToken, isLoading, setIsLoading } = useContext(AppContext)
   const navigate = useNavigate()
 
   const [state, setState] = useState('Sign Up');
@@ -16,41 +17,43 @@ const Login = () => {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
-    
-    try{
+    setIsLoading(true);
+    try {
 
-      if(state === 'Sign Up'){
-        const {data} = await axios.post(backendUrl + '/api/user/register', { name, email, password})
+      if (state === 'Sign Up') {
+        const { data } = await axios.post(backendUrl + '/api/user/register', { name, email, password })
 
-        if(data.success){
+        if (data.success) {
           localStorage.setItem('token', data.token)
           setToken(data.token);
-        }else{
+        } else {
           toast.error(data.message);
         }
 
-      }else{
-        const {data} = await axios.post(backendUrl + '/api/user/login', {  email, password})
+      } else {
+        const { data } = await axios.post(backendUrl + '/api/user/login', { email, password })
 
-        if(data.success){
+        if (data.success) {
           localStorage.setItem('token', data.token)
           setToken(data.token);
-        }else{
+        } else {
           toast.error(data.message);
         }
       }
 
 
-    }catch(err){
+    } catch (err) {
       toast.error(err.message)
+    } finally {
+      setIsLoading(false);
     }
 
   }
-  useEffect(() =>{
-    if(token){
+  useEffect(() => {
+    if (token) {
       navigate('/')
     }
-  },[token])
+  }, [token])
 
   return (
     <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
@@ -74,7 +77,14 @@ const Login = () => {
           <p>Password</p>
           <input className='border border-zinc-300 rounded w-full p-2 mt-1' type="password" onChange={(e) => setPassword(e.target.value)} value={password} required />
         </div>
-        <button type='submit' className='bg-primary text-white w-full py-2 rounded-md text-base'>{state === 'Sign Up' ? "Create Account" : "Login"}</button>
+        <button
+          type='submit'
+          className={`flex justify-center items-center text-white w-full  rounded-md text-base ${isLoading ? 'cursor-not-allowed py-4 bg-gray-400': " bg-primary py-2"}`}
+          disabled={isLoading}
+        >
+          {isLoading ? <Loader /> : state === 'Sign Up' ? "Create Account" : "Login"}
+
+        </button>
         {
           state === 'Sign Up'
             ? <p>Already have an account? <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>Login here</span></p>

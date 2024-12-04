@@ -13,6 +13,7 @@ const appContextProvider = (props) =>{
     const [doctors, setDoctors] = useState([]);
 
     const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [userData, setUserData] = useState(false);
 
@@ -61,6 +62,7 @@ const appContextProvider = (props) =>{
         userData,
         setUserData,
         loadUserProfileData,
+        isLoading, setIsLoading,
     }
 
 
